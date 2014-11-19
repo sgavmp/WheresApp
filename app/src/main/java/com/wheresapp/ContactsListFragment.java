@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.provider.ContactsContract.Contacts; //
 import android.text.TextUtils;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -49,23 +50,35 @@ public class ContactsListFragment extends ListFragment
 
     private class MySimpleCursorAdapter extends SimpleCursorAdapter {
 
+        private int layout;
+        private final LayoutInflater inflater;
+
         public MySimpleCursorAdapter(Context context, int layout, Cursor c, String[] from,
                                      int[] to, int flags) {
             super(context, layout, c, from, to, flags);
+            this.layout = layout;
+            this.inflater = LayoutInflater.from(context);
         }
 
-        public void bindView(View v, Context context, Cursor c) {
-            String src = c.getString(c.getColumnIndex(Contacts.PHOTO_URI));
-            String name = c.getString(c.getColumnIndex(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ?
+        @Override
+        public View newView (Context context, Cursor cursor, ViewGroup parent) {
+            return inflater.inflate(layout, null);
+        }
+
+        @Override
+        public void bindView(View view, Context context, Cursor cursor) {
+            super.bindView(view, context, cursor);
+            String src = cursor.getString(cursor.getColumnIndex(Contacts.PHOTO_URI));
+            String name = cursor.getString(cursor.getColumnIndex(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ?
                     Contacts.DISPLAY_NAME_PRIMARY : Contacts.DISPLAY_NAME));
 
-            ImageView im = (ImageView) v.findViewById(android.R.id.icon);
+            ImageView im = (ImageView) view.findViewById(android.R.id.icon);
             if (src != null) {
                 im.setImageURI(Uri.parse(src));
             } else {
                 im.setImageResource(R.drawable.ic_action_person);
             }
-            TextView text = (TextView) v.findViewById(android.R.id.text1);
+            TextView text = (TextView) view.findViewById(android.R.id.text1);
             text.setText(name);
         }
     }
