@@ -48,39 +48,26 @@ public class ContactsListFragment extends ListFragment
     GoogleCloudMessaging gcm;*/
     String userNumber;
 
-    private class MySimpleCursorAdapter extends SimpleCursorAdapter {
-
-        private int layout;
-        private final LayoutInflater inflater;
-
-        public MySimpleCursorAdapter(Context context, int layout, Cursor c, String[] from,
-                                     int[] to, int flags) {
-            super(context, layout, c, from, to, flags);
-            this.layout = layout;
-            this.inflater = LayoutInflater.from(context);
-        }
+    private class CustomViewBinder implements SimpleCursorAdapter.ViewBinder {
 
         @Override
-        public View newView (Context context, Cursor cursor, ViewGroup parent) {
-            return inflater.inflate(layout, null);
-        }
+        public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
+            if (columnIndex == cursor.getColumnIndex(Contacts.PHOTO_URI)) {
+                String src = cursor.getString(columnIndex);
 
-        @Override
-        public void bindView(View view, Context context, Cursor cursor) {
-            super.bindView(view, context, cursor);
-            String src = cursor.getString(cursor.getColumnIndex(Contacts.PHOTO_URI));
-            String name = cursor.getString(cursor.getColumnIndex(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ?
-                    Contacts.DISPLAY_NAME_PRIMARY : Contacts.DISPLAY_NAME));
-
-            ImageView im = (ImageView) view.findViewById(android.R.id.icon);
-            if (src != null) {
-                im.setImageURI(Uri.parse(src));
-            } else {
-                im.setImageResource(R.drawable.ic_action_person);
+                ImageView im = (ImageView) view.findViewById(android.R.id.icon);
+                if (src != null) {
+                    im.setImageURI(Uri.parse(src));
+                } else {
+                    im.setImageResource(R.drawable.ic_action_person);
+                }
+                return true;
             }
-            TextView text = (TextView) view.findViewById(android.R.id.text1);
-            text.setText(name);
+            // For others, we simply return false so that the default binding
+            // happens.
+            return false;
         }
+
     }
 
     public static class MySearchView extends SearchView {
@@ -125,11 +112,12 @@ public class ContactsListFragment extends ListFragment
         /*Resources resources = this.getResources();
         int iconId = R.drawable.ic_action_person;
          */// Create an empty adapter we will use to display the loaded data.
-        mAdapter = new MySimpleCursorAdapter(getActivity(), R.layout.contacts_list_item, null,
+        mAdapter = new SimpleCursorAdapter(getActivity(), R.layout.contacts_list_item, null,
                 new String[] { Contacts.PHOTO_URI,
                         Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ?
                                 Contacts.DISPLAY_NAME_PRIMARY : Contacts.DISPLAY_NAME },
                 new int[] {android.R.id.icon, android.R.id.text1 }, 0);
+        mAdapter.setViewBinder(new CustomViewBinder());
         setListAdapter(mAdapter);
 
         // Prepare the loader.  Either re-connect with an existing one,
